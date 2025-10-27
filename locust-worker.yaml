@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-worker
+  namespace: gdx-orde-perf
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: locust-worker
+  template:
+    metadata:
+      labels:
+        app: locust-worker
+    spec:
+      containers:
+      - name: locust-worker
+        image: locustio/locust:2.31.2
+        args:
+          - "--worker"
+          - "--master-host=locust-master"
+          - "--locustfile=/mnt/locust/locustfile.py"
+        volumeMounts:
+          - name: locust-scripts
+            mountPath: /mnt/locust
+      volumes:
+        - name: locust-scripts
+          configMap:
+            name: locust-scripts

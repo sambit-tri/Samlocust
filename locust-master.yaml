@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-master
+  namespace: gdx-orde-perf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust-master
+  template:
+    metadata:
+      labels:
+        app: locust-master
+    spec:
+      containers:
+      - name: locust-master
+        image: locustio/locust:2.31.2
+        args:
+          - "--master"
+          - "--web-host=0.0.0.0"
+          - "--locustfile=/mnt/locust/locustfile.py"
+        ports:
+        - containerPort: 8089
+        - containerPort: 5557
+        - containerPort: 5558
+        volumeMounts:
+        - name: locust-scripts
+          mountPath: /mnt/locust
+      volumes:
+      - name: locust-scripts
+        configMap:
+          name: locust-scripts
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-master
+  namespace: gdx-orde-perf
+spec:
+  type: LoadBalancer
+  ports:
+  - name: web
+    port: 8089
+    targetPort: 8089
+  - name: master
+    port: 5557
+    targetPort: 5557
+  selector:
+    app: locust-master
